@@ -39,12 +39,14 @@ void getCPUUsage(char **cpuUsage)
     pclose(fp);
 }
 
-char *buildMessage(char *nombreNodo, char *nombreTopico, char *valorTopico, char *idParticion)
+char *buildMessage1(char *nombreNodo, char *nombreTopico, char *valorTopico, char *idParticion, int useRoundRobin)
 {
     valorTopico[strcspn(valorTopico, "\r\n")] = '\0';
-    idParticion[strcspn(idParticion, "\r\n")] = '\0';
 
-    size_t totalSize = strlen(nombreNodo) + strlen(nombreTopico) + strlen(valorTopico) + strlen(idParticion) + 4; // +4 para los delimitadores y el terminador nulo
+    // Variable estática para rastrear el valor de idParticion
+    static char partitionId[] = "1";
+
+    size_t totalSize = strlen(nombreNodo) + strlen(nombreTopico) + strlen(valorTopico) + strlen(idParticion) + 4;
 
     char *mensaje = (char *)malloc(totalSize);
     if (mensaje == NULL)
@@ -52,17 +54,72 @@ char *buildMessage(char *nombreNodo, char *nombreTopico, char *valorTopico, char
         perror("Error allocating memory");
         return NULL;
     }
-    // Building the desired string
-    snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, idParticion);
+    // Si useRoundRobin es verdadero, cambia el valor de idParticion
+    if (useRoundRobin)
+    {
+        printf("Using Round Robin\n");
+        if (strcmp(partitionId, "1") == 0)
+        {
+            printf("Switching to partition 2\n");
+            strcpy(partitionId, "2");
+        }
+        else
+        {
+            printf("Switching to partition 1\n");
+            strcpy(partitionId, "1");
+        }
+        snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, partitionId);
+    }
+    else
+    {
+        snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, idParticion);
+    }
 
     return mensaje;
 }
+char *buildMessage2(char *nombreNodo, char *nombreTopico, char *valorTopico, char *idParticion, int useRoundRobin)
+{
+    valorTopico[strcspn(valorTopico, "\r\n")] = '\0';
 
+    // Variable estática para rastrear el valor de idParticion
+    static char partitionId[] = "1";
+
+    size_t totalSize = strlen(nombreNodo) + strlen(nombreTopico) + strlen(valorTopico) + strlen(idParticion) + 4;
+
+    char *mensaje = (char *)malloc(totalSize);
+    if (mensaje == NULL)
+    {
+        perror("Error allocating memory");
+        return NULL;
+    }
+    // Si useRoundRobin es verdadero, cambia el valor de idParticion
+    if (useRoundRobin)
+    {
+        printf("Using Round Robin\n");
+        if (strcmp(partitionId, "1") == 0)
+        {
+            printf("Switching to partition 2\n");
+            strcpy(partitionId, "2");
+        }
+        else
+        {
+            printf("Switching to partition 1\n");
+            strcpy(partitionId, "1");
+        }
+        snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, partitionId);
+    }
+    else
+    {
+        snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, idParticion);
+    }
+
+    return mensaje;
+}
 int main(int argc, char *argv[])
 {
     if (argc < 4)
     {
-        printf("Usage: %s <nombre_nodo> <nombre_topico_1> <nombre_topico_2> [<id_particion>]\n", argv[0]);
+        printf("Usage: %s <nombre_nodo> <nombre_topico_1> <nombre_topico_2> [<id_particion_topico_1>] [<id_particion_topico_2>]\n", argv[0]);
         return 1;
     }
 
@@ -70,16 +127,19 @@ int main(int argc, char *argv[])
     char *nombreTopico1 = argv[2];
     char *nombreTopico2 = argv[3];
 
-    char *idParticionStr = NULL;
-    if (argc >= 5)
+    char *idParticionTopico1Str = NULL;
+    char *idParticionTopico2Str = NULL;
+    int useRoundRobin = 0;
+    if (argc >= 6)
     {
-        idParticionStr = argv[4];
+        idParticionTopico1Str = argv[4];
+        idParticionTopico2Str = argv[5];
     }
     else
     {
-        // idParticionStr = strdup("Round Robin");
-        // handleRoundRobin();
-        // idParticionStr = NULL;
+        idParticionTopico1Str = "2"; // Colocamos 2 para iniciar por defecto en la particion 1
+        idParticionTopico2Str = "2";
+        useRoundRobin = 1;
     }
 
     char *memoryUsage = NULL;
@@ -90,8 +150,8 @@ int main(int argc, char *argv[])
         getMemoryUsage(&memoryUsage);
         getCPUUsage(&cpuUsage);
 
-        char *mensajeTopico1 = buildMessage(nombreNodo, nombreTopico1, memoryUsage, idParticionStr);
-        char *mensajeTopico2 = buildMessage(nombreNodo, nombreTopico2, cpuUsage, idParticionStr);
+        char *mensajeTopico1 = buildMessage1(nombreNodo, nombreTopico1, memoryUsage, idParticionTopico1Str, useRoundRobin);
+        char *mensajeTopico2 = buildMessage2(nombreNodo, nombreTopico2, cpuUsage, idParticionTopico2Str, useRoundRobin);
 
         printf("%s\n", mensajeTopico1);
         printf("%s\n", mensajeTopico2);
@@ -100,8 +160,6 @@ int main(int argc, char *argv[])
 
         sleep(5); // Espera 5 segundos
     }
-
-    free(idParticionStr);
 
     return 0;
 }
