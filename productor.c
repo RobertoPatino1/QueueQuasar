@@ -39,6 +39,25 @@ void getCPUUsage(char **cpuUsage)
     pclose(fp);
 }
 
+char *buildMessage(char *nombreNodo, char *nombreTopico, char *valorTopico, char *idParticion)
+{
+    valorTopico[strcspn(valorTopico, "\r\n")] = '\0';
+    idParticion[strcspn(idParticion, "\r\n")] = '\0';
+
+    size_t totalSize = strlen(nombreNodo) + strlen(nombreTopico) + strlen(valorTopico) + strlen(idParticion) + 4; // +4 para los delimitadores y el terminador nulo
+
+    char *mensaje = (char *)malloc(totalSize);
+    if (mensaje == NULL)
+    {
+        perror("Error allocating memory");
+        return NULL;
+    }
+    // Building the desired string
+    snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, idParticion);
+
+    return mensaje;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc < 4)
@@ -54,11 +73,13 @@ int main(int argc, char *argv[])
     char *idParticionStr = NULL;
     if (argc >= 5)
     {
-        idParticionStr = strdup(argv[4]);
+        idParticionStr = argv[4];
     }
     else
     {
-        idParticionStr = strdup("Round Robin");
+        // idParticionStr = strdup("Round Robin");
+        // handleRoundRobin();
+        // idParticionStr = NULL;
     }
 
     char *memoryUsage = NULL;
@@ -69,11 +90,11 @@ int main(int argc, char *argv[])
         getMemoryUsage(&memoryUsage);
         getCPUUsage(&cpuUsage);
 
-        printf("Nombre Nodo: %s\n", nombreNodo);
-        printf("Nombre Topico 1 (%s): Memory Usage: %s", nombreTopico1, memoryUsage);
-        printf("Nombre Topico 2 (%s): CPU Usage: %s", nombreTopico2, cpuUsage);
-        printf("Transmitiendo contenido a la particion: %s\n", idParticionStr);
+        char *mensajeTopico1 = buildMessage(nombreNodo, nombreTopico1, memoryUsage, idParticionStr);
+        char *mensajeTopico2 = buildMessage(nombreNodo, nombreTopico2, cpuUsage, idParticionStr);
 
+        printf("%s\n", mensajeTopico1);
+        printf("%s\n", mensajeTopico2);
         free(memoryUsage);
         free(cpuUsage);
 
