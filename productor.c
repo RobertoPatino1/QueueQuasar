@@ -7,6 +7,8 @@ typedef struct
 {
     char *idParticion;
 } TopicState;
+char *nombreTopico1 = "memoria";
+char *nombreTopico2 = "cpu";
 
 void getMemoryUsage(char **memoryUsage)
 {
@@ -50,15 +52,13 @@ char *buildMessage(char *nombreNodo, char *nombreTopico, char *valorTopico, Topi
 
     if (useRoundRobin)
     {
-        printf("Using Round Robin\n");
+
         if (strcmp(topicState->idParticion, "1") == 0)
         {
-            printf("Switching to partition 2\n");
             topicState->idParticion = "2";
         }
         else
         {
-            printf("Switching to partition 1\n");
             topicState->idParticion = "1";
         }
     }
@@ -76,31 +76,45 @@ char *buildMessage(char *nombreNodo, char *nombreTopico, char *valorTopico, Topi
 
     return mensaje;
 }
-int main(int argc, char *argv[])
+int main(int argc, char *argv[]) //./productor <nombre_nodo> <puerto_productor> <ip_broker> <puerto_broker> [id_particion_topico_1] [id_particion_topico_2]
 {
-    if (argc < 4)
+    if (argc < 5)
     {
-        printf("Usage: %s <nombre_nodo> <nombre_topico_1> <nombre_topico_2> [<id_particion_topico_1>] [<id_particion_topico_2>]\n", argv[0]);
+        printf("Usage: %s <nombre_nodo> <puerto_productor> <ip_broker> <puerto_broker> [<id_particion_topico_1>] [<id_particion_topico_2>]\n", argv[0]);
         return 1;
     }
 
     char *nombreNodo = argv[1];
-    char *nombreTopico1 = argv[2];
-    char *nombreTopico2 = argv[3];
+    char *puerto_productor = argv[2];
+    char *ip_broker = argv[3];
+    char *puerto_broker = argv[4];
 
     char *idParticionTopico1Str = NULL;
     char *idParticionTopico2Str = NULL;
-    int useRoundRobin = 0;
-    if (argc >= 6)
+    int useRoundRobinMessage1 = 0;
+    int useRoundRobinMessage2 = 0;
+    if (argc > 6)
     {
-        idParticionTopico1Str = argv[4];
-        idParticionTopico2Str = argv[5];
+        idParticionTopico1Str = argv[5];
+        idParticionTopico2Str = argv[6];
     }
+    // Handle single partition ID
+    else if (argc == 6)
+    {
+        idParticionTopico1Str = argv[5];
+        idParticionTopico2Str = "2";
+        useRoundRobinMessage2 = 1;
+        printf("No partition ID was provided for topic 2, Round Robin will be used...\n\n");
+    }
+
     else
     {
         idParticionTopico1Str = "2"; // Colocamos 2 para iniciar por defecto en la particion 1
         idParticionTopico2Str = "2";
-        useRoundRobin = 1;
+        useRoundRobinMessage1 = 1;
+        useRoundRobinMessage2 = 1;
+        printf("No partition ID was provided for topic 1, Round Robin will be used...\n");
+        printf("No partition ID was provided for topic 2, Round Robin will be used...\n\n");
     }
 
     char *memoryUsage = NULL;
@@ -112,11 +126,12 @@ int main(int argc, char *argv[])
         getMemoryUsage(&memoryUsage);
         getCPUUsage(&cpuUsage);
 
-        char *mensajeTopico1 = buildMessage(nombreNodo, nombreTopico1, memoryUsage, &topicState1, useRoundRobin);
-        char *mensajeTopico2 = buildMessage(nombreNodo, nombreTopico2, cpuUsage, &topicState2, useRoundRobin);
+        char *mensajeTopico1 = buildMessage(nombreNodo, nombreTopico1, memoryUsage, &topicState1, useRoundRobinMessage1);
+        char *mensajeTopico2 = buildMessage(nombreNodo, nombreTopico2, cpuUsage, &topicState2, useRoundRobinMessage2);
 
         printf("%s\n", mensajeTopico1);
         printf("%s\n", mensajeTopico2);
+        printf("\n");
         free(memoryUsage);
         free(cpuUsage);
 
