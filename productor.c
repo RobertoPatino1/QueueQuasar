@@ -3,11 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#define BUFFER_SIZE 128
-
-void getMemoryUsage(char *memoryUsage)
+void getMemoryUsage(char **memoryUsage)
 {
-    char buffer[BUFFER_SIZE];
+    char buffer[128];
     FILE *fp = popen("free -h | awk 'NR==2{print $3}'", "r");
     if (fp == NULL)
     {
@@ -17,15 +15,15 @@ void getMemoryUsage(char *memoryUsage)
 
     if (fgets(buffer, sizeof(buffer), fp) != NULL)
     {
-        snprintf(memoryUsage, BUFFER_SIZE, "Memory Usage: %s", buffer);
+        *memoryUsage = strdup(buffer);
     }
 
     pclose(fp);
 }
 
-void getCPUUsage(char *cpuUsage)
+void getCPUUsage(char **cpuUsage)
 {
-    char buffer[BUFFER_SIZE];
+    char buffer[128];
     FILE *fp = popen("mpstat 1 1 | awk '/all/ {print 100 - $NF\"%\"}'", "r");
     if (fp == NULL)
     {
@@ -35,7 +33,7 @@ void getCPUUsage(char *cpuUsage)
 
     if (fgets(buffer, sizeof(buffer), fp) != NULL)
     {
-        snprintf(cpuUsage, BUFFER_SIZE, "CPU Usage: %s", buffer);
+        *cpuUsage = strdup(buffer);
     }
 
     pclose(fp);
@@ -53,31 +51,36 @@ int main(int argc, char *argv[])
     char *nombreTopico1 = argv[2];
     char *nombreTopico2 = argv[3];
 
-    char idParticionStr[BUFFER_SIZE];
+    char *idParticionStr = NULL;
     if (argc >= 5)
     {
-        snprintf(idParticionStr, sizeof(idParticionStr), "ID Particion: %s", argv[4]);
+        idParticionStr = strdup(argv[4]);
     }
     else
     {
-        strcpy(idParticionStr, "Round Robin");
+        idParticionStr = strdup("Round Robin");
     }
 
-    char memoryUsage[BUFFER_SIZE];
-    char cpuUsage[BUFFER_SIZE];
+    char *memoryUsage = NULL;
+    char *cpuUsage = NULL;
 
     while (1)
     {
-        getMemoryUsage(memoryUsage);
-        getCPUUsage(cpuUsage);
+        getMemoryUsage(&memoryUsage);
+        getCPUUsage(&cpuUsage);
 
         printf("Nombre Nodo: %s\n", nombreNodo);
-        printf("Nombre Topico 1 (%s): %s\n", nombreTopico1, memoryUsage);
-        printf("Nombre Topico 2 (%s): %s\n", nombreTopico2, cpuUsage);
-        printf("%s\n", idParticionStr);
+        printf("Nombre Topico 1 (%s): Memory Usage: %s", nombreTopico1, memoryUsage);
+        printf("Nombre Topico 2 (%s): CPU Usage: %s", nombreTopico2, cpuUsage);
+        printf("Transmitiendo contenido a la particion: %s\n", idParticionStr);
+
+        free(memoryUsage);
+        free(cpuUsage);
 
         sleep(5); // Espera 5 segundos
     }
+
+    free(idParticionStr);
 
     return 0;
 }
