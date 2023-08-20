@@ -3,6 +3,11 @@
 #include <string.h>
 #include <unistd.h>
 
+typedef struct
+{
+    char *idParticion;
+} TopicState;
+
 void getMemoryUsage(char **memoryUsage)
 {
     char buffer[128];
@@ -39,14 +44,26 @@ void getCPUUsage(char **cpuUsage)
     pclose(fp);
 }
 
-char *buildMessage1(char *nombreNodo, char *nombreTopico, char *valorTopico, char *idParticion, int useRoundRobin)
+char *buildMessage(char *nombreNodo, char *nombreTopico, char *valorTopico, TopicState *topicState, int useRoundRobin)
 {
     valorTopico[strcspn(valorTopico, "\r\n")] = '\0';
 
-    // Variable estática para rastrear el valor de idParticion
-    static char partitionId[] = "1";
+    if (useRoundRobin)
+    {
+        printf("Using Round Robin\n");
+        if (strcmp(topicState->idParticion, "1") == 0)
+        {
+            printf("Switching to partition 2\n");
+            topicState->idParticion = "2";
+        }
+        else
+        {
+            printf("Switching to partition 1\n");
+            topicState->idParticion = "1";
+        }
+    }
 
-    size_t totalSize = strlen(nombreNodo) + strlen(nombreTopico) + strlen(valorTopico) + strlen(idParticion) + 4;
+    size_t totalSize = strlen(nombreNodo) + strlen(nombreTopico) + strlen(valorTopico) + strlen(topicState->idParticion) + 4;
 
     char *mensaje = (char *)malloc(totalSize);
     if (mensaje == NULL)
@@ -54,64 +71,8 @@ char *buildMessage1(char *nombreNodo, char *nombreTopico, char *valorTopico, cha
         perror("Error allocating memory");
         return NULL;
     }
-    // Si useRoundRobin es verdadero, cambia el valor de idParticion
-    if (useRoundRobin)
-    {
-        printf("Using Round Robin\n");
-        if (strcmp(partitionId, "1") == 0)
-        {
-            printf("Switching to partition 2\n");
-            strcpy(partitionId, "2");
-        }
-        else
-        {
-            printf("Switching to partition 1\n");
-            strcpy(partitionId, "1");
-        }
-        snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, partitionId);
-    }
-    else
-    {
-        snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, idParticion);
-    }
 
-    return mensaje;
-}
-char *buildMessage2(char *nombreNodo, char *nombreTopico, char *valorTopico, char *idParticion, int useRoundRobin)
-{
-    valorTopico[strcspn(valorTopico, "\r\n")] = '\0';
-
-    // Variable estática para rastrear el valor de idParticion
-    static char partitionId[] = "1";
-
-    size_t totalSize = strlen(nombreNodo) + strlen(nombreTopico) + strlen(valorTopico) + strlen(idParticion) + 4;
-
-    char *mensaje = (char *)malloc(totalSize);
-    if (mensaje == NULL)
-    {
-        perror("Error allocating memory");
-        return NULL;
-    }
-    // Si useRoundRobin es verdadero, cambia el valor de idParticion
-    if (useRoundRobin)
-    {
-        printf("Using Round Robin\n");
-        if (strcmp(partitionId, "1") == 0)
-        {
-            printf("Switching to partition 2\n");
-            strcpy(partitionId, "2");
-        }
-        else
-        {
-            printf("Switching to partition 1\n");
-            strcpy(partitionId, "1");
-        }
-        snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, partitionId);
-    }
-    else
-    {
-        snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, idParticion);
-    }
+    snprintf(mensaje, totalSize, "%s/%s|%s|%s", nombreNodo, nombreTopico, valorTopico, topicState->idParticion);
 
     return mensaje;
 }
@@ -144,14 +105,15 @@ int main(int argc, char *argv[])
 
     char *memoryUsage = NULL;
     char *cpuUsage = NULL;
-
+    TopicState topicState1 = {.idParticion = idParticionTopico1Str};
+    TopicState topicState2 = {.idParticion = idParticionTopico2Str};
     while (1)
     {
         getMemoryUsage(&memoryUsage);
         getCPUUsage(&cpuUsage);
 
-        char *mensajeTopico1 = buildMessage1(nombreNodo, nombreTopico1, memoryUsage, idParticionTopico1Str, useRoundRobin);
-        char *mensajeTopico2 = buildMessage2(nombreNodo, nombreTopico2, cpuUsage, idParticionTopico2Str, useRoundRobin);
+        char *mensajeTopico1 = buildMessage(nombreNodo, nombreTopico1, memoryUsage, &topicState1, useRoundRobin);
+        char *mensajeTopico2 = buildMessage(nombreNodo, nombreTopico2, cpuUsage, &topicState2, useRoundRobin);
 
         printf("%s\n", mensajeTopico1);
         printf("%s\n", mensajeTopico2);
