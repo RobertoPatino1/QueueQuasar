@@ -1,14 +1,18 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -std=c99
 
-productor: productor.o productor_utils.o
-	$(CC) $(CFLAGS) -o productor productor.o productor_utils.o
+all: main
 
-productor.o: productor.c productor_utils.h
-	$(CC) $(CFLAGS) -c productor.c
+main: main.o multiPartitionQueue.o
+	$(CC) $(CFLAGS) -o $@ $^
 
-productor_utils.o: productor_utils.c productor_utils.h
-	$(CC) $(CFLAGS) -c productor_utils.c
+main.o: main.c multiPartitionQueue.h
+	$(CC) $(CFLAGS) -c $<
+
+multiPartitionQueue.o: multiPartitionQueue.c multiPartitionQueue.h
+	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f productor *.o
+	rm -f main *.o
+
+.PHONY: all clean
