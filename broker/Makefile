@@ -1,18 +1,18 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c99
 
-all: main
+all: broker
 
-main: main.o multiPartitionQueue.o
+broker: broker.o connection_utils.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-main.o: main.c multiPartitionQueue.h
+broker.o: broker.c connection_utils.h
 	$(CC) $(CFLAGS) -c $<
 
-multiPartitionQueue.o: multiPartitionQueue.c multiPartitionQueue.h
+connection_utils.o: connection_utils.c connection_utils.h
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f main *.o
+	rm -f broker *.o
 
 .PHONY: all clean
