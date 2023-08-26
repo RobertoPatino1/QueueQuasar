@@ -1,10 +1,11 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c99
+LDFLAGS = -pthread
 
 all: broker
 
 broker: broker.o connection_utils.o
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 broker.o: broker.c connection_utils.h
 	$(CC) $(CFLAGS) -c $<

@@ -1,37 +1,56 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+
 #include "connection_utils.h"
 
-int acceptClientConnection(int server_socket, ClientConnection *connection)
+void *handle_productor(void *arg)
 {
-    struct sockaddr_in client_addr;
-    socklen_t client_addr_len = sizeof(client_addr);
-    connection->client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_len);
-    if (connection->client_socket == -1)
+    int productor_sock = *(int *)arg;
+    char message[MAX_MESSAGE_LENGTH];
+    int read_size;
+
+    while ((read_size = recv(productor_sock, message, sizeof(message), 0)) > 0)
     {
-        perror("Accepting connection failed");
-        return -1;
+        message[read_size] = '\0';
+
+        pthread_mutex_lock(&mutex);
+        printf("%s\n", message);
+        pthread_mutex_unlock(&mutex);
     }
-    return 0;
+
+    printf("El productor se ha desconectado\n");
+    close(productor_sock);
+    free(arg);
+    pthread_exit(NULL);
 }
 
-int receiveMessageFromClient(ClientConnection *connection, char *buffer, size_t buffer_size)
+void *handle_productor_connections(void *arg)
 {
-    ssize_t bytes_received = recv(connection->client_socket, buffer, buffer_size - 1, 0);
-    if (bytes_received <= 0)
-    {
-        // Error or connection closed
-        return -1;
-    }
-    buffer[bytes_received] = '\0'; // Ensure buffer is a valid string
-    return bytes_received;
-}
+    int broker_sock_productor = *(int *)arg;
+    struct sockaddr_in broker_addr_productor;
+    int c = sizeof(struct sockaddr_in);
 
-void closeClientConnection(ClientConnection *connection)
-{
-    close(connection->client_socket);
+    while (1)
+    {
+        int productor_sock = accept(broker_sock_productor, (struct sockaddr *)&broker_addr_productor, (socklen_t *)&c);
+        if (productor_sock < 0)
+        {
+            printf("Error accepting productor connection\n");
+            continue;
+        }
+
+        // Mostrar información de la conexión del Productor
+        printf("Productor connected from %s:%d\n", inet_ntoa(broker_addr_productor.sin_addr), ntohs(broker_addr_productor.sin_port));
+
+        // Crear hilo para manejar al productor
+        pthread_t productor_thread_id;
+        int *productor_sock_ptr = (int *)malloc(sizeof(int));
+        *productor_sock_ptr = productor_sock;
+        if (pthread_create(&productor_thread_id, NULL, handle_productor, (void *)productor_sock_ptr) != 0)
+        {
+            printf("Error creating productor thread\n");
+            return NULL;
+        }
+        pthread_detach(productor_thread_id);
+    }
+
+    return NULL;
 }
