@@ -44,11 +44,6 @@ int main(int argc, char *argv[])
     listen(broker_sock_productor, 10);
     printf("Successfully initialized broker using the port: %d\n", broker_port_productor);
 
-    if (pthread_mutex_init(&mutex, NULL) != 0)
-    {
-        printf("Error al inicializar el mutex\n");
-        return 1;
-    }
 
     pthread_t productor_connections_thread_id;
 
@@ -70,7 +65,7 @@ int main(int argc, char *argv[])
         sleep(1);
     }
 
-    pthread_mutex_destroy(&mutex);
+
 
     close(broker_sock_productor);
     close(broker_sock_subscribers);

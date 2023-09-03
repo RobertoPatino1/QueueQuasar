@@ -1,4 +1,5 @@
 #include "connection_utils.h"
+pthread_mutex_t mutex;
 void *handle_productor(void *arg)
 {
     printf("ENTRAMOS A HANDLE PRODUCTOR\n");
