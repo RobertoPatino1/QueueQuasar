@@ -1,4 +1,3 @@
-
 #include "connection_utils.h"
 
 void *handle_productor(void *arg)
@@ -12,7 +11,14 @@ void *handle_productor(void *arg)
         message[read_size] = '\0';
 
         pthread_mutex_lock(&mutex);
-        printf("%s\n", message);
+        // printf("%s\n\n", message);
+        // char *nombreNodo = strtok(message, "/");
+        // printf(" %s\n", nombreNodo); // Primera ocurrencia es el nombre del nodo
+
+        // char *categoria = strtok(message, "/");
+        // printf(" %s\n", categoria);
+
+        splitAndEnqueue(message, "/");
         pthread_mutex_unlock(&mutex);
     }
 
@@ -53,4 +59,39 @@ void *handle_productor_connections(void *arg)
     }
 
     return NULL;
+}
+
+void splitAndEnqueue(char *cadena, char *delimiter1)
+{
+    char *token = strtok(cadena, delimiter1);
+    int i = 0;
+    while (token != NULL)
+    {
+        if (i == 0)
+        {
+            // Se extrae el nombre del nodo
+            printf("Nombre del nodo: %s\n", token);
+        }
+
+        if (i == 1)
+        {
+            // Se extrae el nombre de la metrica
+            printf("Nombre de la metrica: %s\n", token);
+        }
+        else if (i == 2)
+        {
+            // Se extrae el valor de la metrica
+            printf("Valor de la metrica: %s\n", token);
+        }
+        else if (i == 3)
+        {
+            // Se extrae el numero de la particion
+            printf("Numero de la particion: %s\n", token);
+        }
+        i++;
+        token = strtok(NULL, "|");
+    }
+    printf("\n");
+
+    return 0;
 }

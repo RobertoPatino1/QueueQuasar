@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 3)
     {
-        printf("Uso: %s <puerto_productor> <puerto_consumidor>\n", argv[0]);
+        printf("Uso: %s <puerto_broker> <puerto_consumidor>\n", argv[0]);
         return 1;
     }
 
