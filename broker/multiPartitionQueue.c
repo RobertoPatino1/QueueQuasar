@@ -35,7 +35,15 @@ MultiPartitionQueue *createMultiPartitionQueue(int numPartitions)
 
 void enqueue(MultiPartitionQueue *queue, char *sectionName, int partitionIndex, char *data)
 {
-    int partitionNumber = partitionIndex + 1;
+    int partitionNumber;
+    if (strcmp(sectionName, "memoria") == 0)
+    {
+        partitionNumber = partitionIndex + 1;
+    }
+    else
+    {
+        partitionNumber = partitionIndex - 1;
+    }
     printf("Enqueuing message: \"%s\" into %s, partition %d\n", data, sectionName, partitionNumber);
     if (partitionIndex >= 0 && partitionIndex < queue->numPartitions)
     {
@@ -88,8 +96,16 @@ void printPartitionContents(MultiPartitionQueue *queue, char *sectionName, int p
 {
     if (partitionIndex >= 0 && partitionIndex < queue->numPartitions)
     {
-        int n = partitionIndex;
-        printf("Contents of %s Partition %d:\n", sectionName, n + 1);
+        int partitionNumber;
+        if (strcmp(sectionName, "memoria") == 0)
+        {
+            partitionNumber = partitionIndex + 1;
+        }
+        else
+        {
+            partitionNumber = partitionIndex - 1;
+        }
+        printf("Contents of %s Partition %d:\n", sectionName, partitionNumber);
         QueueNode *current = queue->partitions[partitionIndex].queue->front;
         printf("[");
         while (current != NULL)
