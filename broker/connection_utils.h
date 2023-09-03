@@ -13,11 +13,15 @@
 
 pthread_mutex_t mutex;
 
-extern MultiPartitionQueue *mp_queue;
+struct ThreadContent
+{
+    int broker_sock_productor;
+    MultiPartitionQueue *mp_queue;
+};
 
 void *handle_productor(void *arg);
 void *handle_productor_connections(void *arg);
 int initialize_broker_socket(int port);
-void splitAndEnqueue(char *cadena, char *delimiter1);
+void splitAndEnqueue(char *cadena, char *delimiter1, MultiPartitionQueue *mp_queue);
 
 #endif
