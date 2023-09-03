@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) //./productor <nombre_nodo> <puerto_productor> 
             closeBrokerConnection(&brokerConnection);
             return 1;
         }
-        sleep(1);
+        sleep(5);
         if (sendMessageToBroker(&brokerConnection, mensajeTopico2) == -1)
         {
             closeBrokerConnection(&brokerConnection);
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) //./productor <nombre_nodo> <puerto_productor> 
         free(memoryUsage);
         free(cpuUsage);
 
-        sleep(5); // Espera 5 segundos
+        sleep(10); // Espera 5 segundos
     }
     closeBrokerConnection(&brokerConnection);
 
