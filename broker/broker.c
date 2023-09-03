@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "connection_utils.h"
+MultiPartitionQueue *mp_queue;
 
 int main(int argc, char *argv[])
 {
@@ -51,6 +52,10 @@ int main(int argc, char *argv[])
     }
 
     pthread_t productor_connections_thread_id;
+
+    // Creando la cola multi-particiones
+    mp_queue = createMultiPartitionQueue(2);
+
     if (pthread_create(&productor_connections_thread_id, NULL, handle_productor_connections, (void *)&broker_sock_productor) != 0)
     {
         printf("Error creating connections thread\n");

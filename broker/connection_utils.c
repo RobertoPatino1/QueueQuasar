@@ -1,5 +1,4 @@
 #include "connection_utils.h"
-
 void *handle_productor(void *arg)
 {
     int productor_sock = *(int *)arg;
@@ -11,12 +10,6 @@ void *handle_productor(void *arg)
         message[read_size] = '\0';
 
         pthread_mutex_lock(&mutex);
-        // printf("%s\n\n", message);
-        // char *nombreNodo = strtok(message, "/");
-        // printf(" %s\n", nombreNodo); // Primera ocurrencia es el nombre del nodo
-
-        // char *categoria = strtok(message, "/");
-        // printf(" %s\n", categoria);
 
         splitAndEnqueue(message, "/");
         pthread_mutex_unlock(&mutex);
@@ -65,6 +58,9 @@ void splitAndEnqueue(char *cadena, char *delimiter1)
 {
     char *token = strtok(cadena, delimiter1);
     int i = 0;
+    char *sectionName;
+    int partitionIndex;
+    char *data;
     while (token != NULL)
     {
         if (i == 0)
@@ -76,22 +72,28 @@ void splitAndEnqueue(char *cadena, char *delimiter1)
         if (i == 1)
         {
             // Se extrae el nombre de la metrica
-            printf("Nombre de la metrica: %s\n", token);
+            sectionName = token;
+            printf("Valor de la metrica: %s\n", sectionName);
         }
-        else if (i == 2)
+        if (i == 2)
         {
             // Se extrae el valor de la metrica
-            printf("Valor de la metrica: %s\n", token);
+
+            data = token;
+            printf("Valor de la metrica: %s\n", data);
         }
-        else if (i == 3)
+        if (i == 3)
         {
             // Se extrae el numero de la particion
-            printf("Numero de la particion: %s\n", token);
+            partitionIndex = atoi(token) - 1;
+            printf("Numero de la particion: %d\n", partitionIndex);
         }
         i++;
         token = strtok(NULL, "|");
     }
-    printf("\n");
 
-    return 0;
+    printf("\n");
+    printf("%s, %d, %s\n", sectionName, partitionIndex, data);
+    enqueue(mp_queue, sectionName, partitionIndex, data);
+    printPartitionContents(mp_queue, sectionName, partitionIndex);
 }

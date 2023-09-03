@@ -88,7 +88,8 @@ void printPartitionContents(MultiPartitionQueue *queue, char *sectionName, int p
 {
     if (partitionIndex >= 0 && partitionIndex < queue->numPartitions)
     {
-        printf("Contents of %s Partition %d:\n", sectionName, partitionIndex);
+        int n = partitionIndex;
+        printf("Contents of %s Partition %d:\n", sectionName, n + 1);
         QueueNode *current = queue->partitions[partitionIndex].queue->front;
         printf("[");
         while (current != NULL)

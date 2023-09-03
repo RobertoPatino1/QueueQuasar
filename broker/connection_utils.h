@@ -7,13 +7,17 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <unistd.h>
+#include "multiPartitionQueue.h"
 
 #define MAX_MESSAGE_LENGTH 256
 
 pthread_mutex_t mutex;
 
-void *handle_prodcutor(void *arg);
+extern MultiPartitionQueue *mp_queue;
+
+void *handle_productor(void *arg);
 void *handle_productor_connections(void *arg);
 int initialize_broker_socket(int port);
+void splitAndEnqueue(char *cadena, char *delimiter1);
 
 #endif
