@@ -73,8 +73,13 @@ int main(int argc, char *argv[]) //./productor <nombre_nodo> <puerto_productor> 
         printf("%s\n", mensajeTopico2);
         printf("\n");
 
-        if (sendMessageToBroker(&brokerConnection, mensajeTopico1) == -1 ||
-            sendMessageToBroker(&brokerConnection, mensajeTopico2) == -1)
+        if (sendMessageToBroker(&brokerConnection, mensajeTopico1) == -1)
+        {
+            closeBrokerConnection(&brokerConnection);
+            return 1;
+        }
+        sleep(1);
+        if (sendMessageToBroker(&brokerConnection, mensajeTopico2) == -1)
         {
             closeBrokerConnection(&brokerConnection);
             return 1;
