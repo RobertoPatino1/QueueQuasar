@@ -7,7 +7,7 @@ CONSUMIDOR_EXEC = consumidor
 
 all: $(CONSUMIDOR_EXEC)
 
-$(CONSUMIDOR_EXEC): consumidor.c connection_utils.c
+$(CONSUMIDOR_EXEC): consumidor.c 
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
