@@ -64,13 +64,7 @@ int main(int argc, char *argv[])
         sleep(1);
     }
 
-<<<<<<< HEAD
-    pthread_mutex_destroy(&mutex2);
-    == == == =
-
->>>>>>> 993365668e269ec810b46265e8a0a74a38efd476
-
-                 close(broker_sock_productor);
+    close(broker_sock_productor);
     close(broker_sock_subscribers);
     return 0;
 }
