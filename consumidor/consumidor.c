@@ -29,13 +29,23 @@ int main(int argc, char *argv[])
     }
 
     char response[MAX_MESSAGE_LENGTH];
-    if (receiveMessageFromBroker(&brokerConnection, response) == -1)
+    int read_size = receiveMessageFromBroker(&brokerConnection, response);
+
+    if (read_size == -1)
     {
+        perror("Error receiving response from broker");
         closeBrokerConnection(&brokerConnection);
         return 1;
     }
-
-    printf("Response from broker: %s\n", response);
+    else if (read_size == 0)
+    {
+        printf("Broker disconnected\n");
+    }
+    else
+    {
+        response[read_size] = '\0';
+        printf("Response from broker: %s\n", response);
+    }
 
     closeBrokerConnection(&brokerConnection);
 

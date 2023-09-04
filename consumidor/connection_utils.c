@@ -36,6 +36,7 @@ int establishBrokerConnection(BrokerConnection *connection, const char *ip, int 
 
 int sendMessageToBroker(BrokerConnection *connection, const char *message)
 {
+    printf("Se enviara el mensaje: %s al broker\n", message);
     if (send(connection->broker_socket, message, strlen(message), 0) == -1)
     {
         perror("Error sending message to broker");
