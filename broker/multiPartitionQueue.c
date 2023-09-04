@@ -5,7 +5,7 @@ MultiPartitionQueue *createMultiPartitionQueue(int numPartitions)
     MultiPartitionQueue *queue = (MultiPartitionQueue *)malloc(sizeof(MultiPartitionQueue));
     if (queue == NULL)
     {
-        perror("Error creating multi-partition queue");
+        perror("Error creando la cola multi particiones");
         return NULL;
     }
 
@@ -13,7 +13,7 @@ MultiPartitionQueue *createMultiPartitionQueue(int numPartitions)
     queue->partitions = (Partition *)malloc(numPartitions * sizeof(Partition));
     if (queue->partitions == NULL)
     {
-        perror("Error creating partitions");
+        perror("Error al crear las particiones");
         free(queue);
         return NULL;
     }
@@ -23,7 +23,7 @@ MultiPartitionQueue *createMultiPartitionQueue(int numPartitions)
         queue->partitions[i].queue = (Queue *)malloc(sizeof(Queue));
         if (queue->partitions[i].queue == NULL)
         {
-            perror("Error creating partition queue");
+            perror("Error creando las colas de particiones");
             freeMultiPartitionQueue(queue);
             return NULL;
         }
@@ -44,7 +44,7 @@ void enqueue(MultiPartitionQueue *queue, char *sectionName, int partitionIndex, 
     {
         partitionNumber = partitionIndex - 1;
     }
-    printf("Enqueuing message: \"%s\" into %s, partition %d\n", data, sectionName, partitionNumber);
+    printf(">>>Encolando mensaje: \"%s\" en %s, particion %d\n", data, sectionName, partitionNumber);
     if (partitionIndex >= 0 && partitionIndex < queue->numPartitions)
     {
         QueueNode *newNode = (QueueNode *)malloc(sizeof(QueueNode));
@@ -68,7 +68,7 @@ void enqueue(MultiPartitionQueue *queue, char *sectionName, int partitionIndex, 
     }
 }
 
-char *dequeue(MultiPartitionQueue *queue, char *sectionName, int partitionIndex)
+char *dequeue(MultiPartitionQueue *queue, int partitionIndex)
 {
     if (partitionIndex >= 0 && partitionIndex < queue->numPartitions)
     {
@@ -106,7 +106,7 @@ void printPartitionContents(MultiPartitionQueue *queue, char *sectionName, int p
         {
             partitionNumber = partitionIndex - 1;
         }
-        printf("Contents of %s Partition %d:\n", sectionName, partitionNumber);
+        printf("Contenido de %s, particion %d:\n", sectionName, partitionNumber);
         QueueNode *current = queue->partitions[partitionIndex].queue->front;
         printf("[");
         while (current != NULL)

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct QueueNode
 {
@@ -29,7 +30,7 @@ typedef struct MultiPartitionQueue
 
 MultiPartitionQueue *createMultiPartitionQueue(int numPartitions);
 void enqueue(MultiPartitionQueue *queue, char *sectionName, int partitionIndex, char *data);
-char *dequeue(MultiPartitionQueue *queue, char *sectionName, int partitionIndex);
+char *dequeue(MultiPartitionQueue *queue, int partitionIndex);
 void printPartitionContents(MultiPartitionQueue *queue, char *sectionName, int partitionIndex);
 void freeMultiPartitionQueue(MultiPartitionQueue *queue);
 

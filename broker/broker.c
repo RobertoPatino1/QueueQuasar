@@ -98,6 +98,6 @@ int main(int argc, char *argv[])
     pthread_mutex_destroy(&mutex2);
 
     close(broker_sock_productor);
-    close(broker_sock_consumidor);
+    // close(broker_sock_consumidor);
     return 0;
 }

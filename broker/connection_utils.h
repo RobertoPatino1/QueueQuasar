@@ -23,6 +23,7 @@ void *handle_productor(void *arg);
 void *handle_consumidor(void *arg);
 void *handle_productor_connections(void *arg);
 void *handle_consumidor_connections(void *arg);
+int generateOption(char *solicitud_especifica);
 void splitAndEnqueue(char *cadena);
 void send_message_to_consumidor(int consumidor_socket, int opcion);
 #endif
