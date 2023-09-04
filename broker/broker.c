@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "connection_utils.h"
-
+pthread_mutex_t mutex2;
 int main(int argc, char *argv[])
 {
     if (argc != 3)
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     listen(broker_sock_productor, 10);
     printf("Successfully initialized broker using the port: %d\n", broker_port_productor);
 
-    if (pthread_mutex_init(&mutex, NULL) != 0)
+    if (pthread_mutex_init(&mutex2, NULL) != 0)
     {
         printf("Error al inicializar el mutex\n");
         return 1;
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
         sleep(1);
     }
 
-    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&mutex2);
 
     close(broker_sock_productor);
     close(broker_sock_subscribers);

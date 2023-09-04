@@ -1,28 +1,22 @@
 #include "connection_utils.h"
+
 void *handle_productor(void *arg)
 {
-    printf("ENTRAMOS A HANDLE PRODUCTOR\n");
 
     struct ThreadContent *data = (struct ThreadContent *)arg;
-    printf("CONTINUAMOS 1 EN HANDLE PRODUCTOR\n");
-    int productor_sock = (int *)data->broker_sock_productor;
-    printf("%d\n", data->broker_sock_productor);
-    printf("CONTINUAMOS 2 EN HANDLE PRODUCTOR\n");
+    int productor_sock = (int)data->broker_sock_productor;
     MultiPartitionQueue *mp_queue = data->mp_queue;
-
-    printf("CONTINUAMOS 3 EN HANDLE PRODUCTOR\n");
     char message[MAX_MESSAGE_LENGTH];
     int read_size;
     while ((read_size = recv(productor_sock, message, sizeof(message), 0)) > 0)
     {
-        printf("Mensaje recibido del productor: %s\n", message);
-        message[read_size] = '\0';
 
+        message[read_size] = '\0';
+        printf("Mensaje recibido del productor: %s\n", message);
         pthread_mutex_lock(&mutex);
 
-        splitAndEnqueue(message, "/", mp_queue);
+        splitAndEnqueue(message, mp_queue);
 
-        sleep(2);
         pthread_mutex_unlock(&mutex);
     }
 
@@ -34,12 +28,9 @@ void *handle_productor(void *arg)
 
 void *handle_productor_connections(void *arg)
 {
-    printf("ENTRAMOS A HANDLE PRODUCTOR CONNECTIONS\n");
-    printf("Continuamos 1 en HANDLE PRODUCTOR CONNECTIONS\n");
+
     struct ThreadContent *data = (struct ThreadContent *)arg;
-    printf("Continuamos 2 en HANDLE PRODUCTOR CONNECTIONS\n");
     int broker_sock_productor = (int *)data->broker_sock_productor;
-    printf("Continuamos 3 en HANDLE PRODUCTOR CONNECTIONS\n");
 
     struct sockaddr_in broker_addr_productor;
     int c = sizeof(struct sockaddr_in);
@@ -56,15 +47,11 @@ void *handle_productor_connections(void *arg)
         // Mostrar información de la conexión del Productor
         printf("Productor connected from %s:%d\n", inet_ntoa(broker_addr_productor.sin_addr), ntohs(broker_addr_productor.sin_port));
 
-        printf("Continuamos 4 en HANDLE PRODUCTOR CONNECTIONS\n");
         // Crear hilo para manejar al productor
         pthread_t productor_thread_id;
         int *productor_sock_ptr = (int *)malloc(sizeof(int));
         *productor_sock_ptr = productor_sock;
-        printf("Continuamos 5 en HANDLE PRODUCTOR CONNECTIONS\n");
         data->broker_sock_productor = *productor_sock_ptr;
-        printf("EL VALOR ES: %d\n", data->broker_sock_productor);
-        printf("Continuamos 6 en HANDLE PRODUCTOR CONNECTIONS\n");
 
         if (pthread_create(&productor_thread_id, NULL, handle_productor, (void *)data) != 0)
         {
@@ -77,7 +64,7 @@ void *handle_productor_connections(void *arg)
     return NULL;
 }
 
-void splitAndEnqueue(char *cadena, char *delimiter1, MultiPartitionQueue *mp_queue)
+void splitAndEnqueue(char *cadena, MultiPartitionQueue *mp_queue)
 {
 
     char *token = strtok(cadena, "/");
