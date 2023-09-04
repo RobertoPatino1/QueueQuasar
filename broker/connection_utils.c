@@ -7,16 +7,14 @@ void *handle_productor(void *arg)
 
     char message[MAX_MESSAGE_LENGTH];
     int read_size;
+
     while ((read_size = recv(productor_sock, message, sizeof(message), 0)) > 0)
     {
         message[read_size] = '\0';
         printf("Mensaje recibido del productor: %s\n", message);
-        pthread_mutex_lock(&mutex);
 
         splitAndEnqueue(message);
-
         sleep(2);
-        pthread_mutex_unlock(&mutex);
     }
 
     printf("El productor se ha desconectado\n");
@@ -29,6 +27,7 @@ void *handle_consumidor(void *arg)
     int consumidor_sock = *(int *)arg;
     char message[MAX_MESSAGE_LENGTH];
     int read_size;
+    pthread_mutex_lock(&mutex);
     read_size = recv(consumidor_sock, message, sizeof(message), 0);
     if (read_size == -1)
     {
@@ -36,7 +35,7 @@ void *handle_consumidor(void *arg)
         close(consumidor_sock);
     }
     message[read_size] = '\0';
-    pthread_mutex_lock(&mutex);
+
     printf("Mensaje recibido del consumidor: %s\n", message);
 
     // #################################
