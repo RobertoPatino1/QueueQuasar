@@ -109,13 +109,36 @@ void splitAndEnqueue(char *cadena, MultiPartitionQueue *mp_queue)
     strcpy(sectionName2, sectionName);
     if (strcmp(sectionName2, "memoria") == 0)
     {
-        enqueue(mp_queue, "memoria", partitionNumber - 1, data2);
-        printPartitionContents(mp_queue, "memoria", partitionNumber - 1);
+        enqueue(mp_queue_productor, "memoria", partitionNumber - 1, data2);
+        printPartitionContents(mp_queue_productor, "memoria", partitionNumber - 1);
+
+        // Ahora, vamos a desencolar un elemento de "memoria" en la misma partición
+        char *dequeuedData = dequeue(mp_queue_productor, "memoria", partitionNumber - 1);
+        if (dequeuedData != NULL)
+        {
+            printf("Elemento desencolado de \"memoria\" en la partición %d: %s\n", partitionNumber - 1, dequeuedData);
+            free(dequeuedData); // Asegúrate de liberar la memoria del elemento desencolado.
+        }
+        else
+        {
+            printf("No hay elementos en la cola \"memoria\" en la partición %d\n", partitionNumber - 1);
+        }
     }
     else if (strcmp(sectionName2, "cpu") == 0)
     {
+        enqueue(mp_queue_productor, "cpu", partitionNumber + 1, data2);
+        printPartitionContents(mp_queue_productor, "cpu", partitionNumber + 1);
 
-        enqueue(mp_queue, "cpu", partitionNumber + 1, data2);
-        printPartitionContents(mp_queue, "cpu", partitionNumber + 1);
+        // Ahora, vamos a desencolar un elemento de "cpu" en la misma partición
+        char *dequeuedData = dequeue(mp_queue_productor, "cpu", partitionNumber + 1);
+        if (dequeuedData != NULL)
+        {
+            printf("Elemento desencolado de \"cpu\" en la partición %d: %s\n", partitionNumber + 1, dequeuedData);
+            free(dequeuedData); // Asegúrate de liberar la memoria del elemento desencolado.
+        }
+        else
+        {
+            printf("No hay elementos en la cola \"cpu\" en la partición %d\n", partitionNumber + 1);
+        }
     }
 }

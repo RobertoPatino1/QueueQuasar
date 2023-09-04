@@ -72,6 +72,7 @@ char *dequeue(MultiPartitionQueue *queue, char *sectionName, int partitionIndex)
 {
     if (partitionIndex >= 0 && partitionIndex < queue->numPartitions)
     {
+
         if (queue->partitions[partitionIndex].queue->front == NULL)
         {
             return NULL; // Empty queue
