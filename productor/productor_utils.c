@@ -10,7 +10,7 @@ void getMemoryUsage(char **memoryUsage)
     FILE *fp = popen("free -h | awk 'NR==2{print $3}'", "r");
     if (fp == NULL)
     {
-        perror("Error executing free");
+        perror("Error al ejecutar free");
         return;
     }
 
@@ -28,7 +28,7 @@ void getCPUUsage(char **cpuUsage)
     FILE *fp = popen("mpstat 1 1 | awk '/all/ {print 100 - $NF\"%\"}'", "r");
     if (fp == NULL)
     {
-        perror("Error executing mpstat");
+        perror("Error al ejecutar mpstat");
         return;
     }
 
@@ -61,7 +61,7 @@ char *buildMessage(char *nombreNodo, char *nombreTopico, char *valorTopico, Topi
     char *mensaje = (char *)malloc(totalSize);
     if (mensaje == NULL)
     {
-        perror("Error allocating memory");
+        perror("Error alojando memoria");
         return NULL;
     }
 

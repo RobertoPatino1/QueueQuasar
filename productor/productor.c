@@ -59,8 +59,8 @@ int main(int argc, char *argv[]) //./productor <nombre_nodo> <puerto_productor> 
     TopicState topicState1 = {.idParticion = idParticionTopico1Str};
     TopicState topicState2 = {.idParticion = idParticionTopico2Str};
 
-    printf("Initiating transmission of messages to the broker: \n");
-    printf("DIRECCION_IP_PRODUCTOR:%s ---> %s:%s\n\n", puerto_productor, ip_broker, puerto_broker);
+    printf("Iniciando la transimision de mensajes al broker: \n\n");
+    printf("----DIRECCION_IP_PRODUCTOR:%s ---> %s:%s----\n\n", puerto_productor, ip_broker, puerto_broker);
     while (1)
     {
         getMemoryUsage(&memoryUsage);
@@ -87,8 +87,6 @@ int main(int argc, char *argv[]) //./productor <nombre_nodo> <puerto_productor> 
 
         free(memoryUsage);
         free(cpuUsage);
-
-        // sleep(10); // Espera 5 segundos
     }
     closeBrokerConnection(&brokerConnection);
 
