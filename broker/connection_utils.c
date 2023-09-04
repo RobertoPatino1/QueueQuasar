@@ -41,8 +41,8 @@ void *handle_consumidor(void *arg)
     char *solicitud_especifica = strtok(solicitud, "/");
     solicitud_especifica = strtok(NULL, "-");
 
-    char *persistencia = strtok(NULL, "-");
-    printf("USAR PERSISTENCIA??? %s\n", persistencia); // Si es 1, escribimos en un archivo!!!
+    persistencia = atoi(strtok(NULL, "-"));
+    printf("\nUsar persistencia? %d\n", persistencia); // Si es 1, escribimos en un archivo!!!
     opcion = generateOption(solicitud_especifica);
     while (1)
     {
@@ -144,6 +144,18 @@ int generateOption(char *solicitud_especifica)
     }
     return opcion;
 }
+
+void escribirEnArchivoPersistente(const char *cadena)
+{
+    FILE *archivo = fopen("persistence.txt", "a");
+    if (archivo == NULL)
+    {
+        perror("Error al abrir el archivo");
+        return;
+    }
+    fprintf(archivo, "%s\n", cadena);
+    fclose(archivo);
+}
 void send_message_to_consumidor(int consumidor_socket, int opcion)
 {
     if (opcion == 1 || opcion == 0)
@@ -155,6 +167,8 @@ void send_message_to_consumidor(int consumidor_socket, int opcion)
             printf("Elemento desencolado de \"memoria\" en la partición %d: %s\n", 1, dequeuedDataMemoryPartition1);
             if (send(consumidor_socket, dequeuedDataMemoryPartition1, sizeof(dequeuedDataMemoryPartition1), 0) == -1)
                 perror("Error al enviar el mensaje");
+            if (persistencia == 1)
+                escribirEnArchivoPersistente(dequeuedDataMemoryPartition1);
             free(dequeuedDataMemoryPartition1); // Asegúrate de liberar la memoria del elemento desencolado.
         }
         char *dequeuedDataMemoryPartition2 = dequeue(mp_queue_productor, 1);
@@ -163,6 +177,8 @@ void send_message_to_consumidor(int consumidor_socket, int opcion)
             printf("Elemento desencolado de \"memoria\" en la partición %d: %s\n", 2, dequeuedDataMemoryPartition2);
             if (send(consumidor_socket, dequeuedDataMemoryPartition2, sizeof(dequeuedDataMemoryPartition2), 0) == -1)
                 perror("Error al enviar el mensaje");
+            if (persistencia == 1)
+                escribirEnArchivoPersistente(dequeuedDataMemoryPartition2);
             free(dequeuedDataMemoryPartition2); // Asegúrate de liberar la memoria del elemento desencolado.
         }
     }
@@ -175,6 +191,8 @@ void send_message_to_consumidor(int consumidor_socket, int opcion)
             printf("Elemento desencolado de \"CPU\" en la partición %d: %s\n", 1, dequeuedDataCpuPartition1);
             if (send(consumidor_socket, dequeuedDataCpuPartition1, sizeof(dequeuedDataCpuPartition1), 0) == -1)
                 perror("Error al enviar el mensaje");
+            if (persistencia == 1)
+                escribirEnArchivoPersistente(dequeuedDataCpuPartition1);
             free(dequeuedDataCpuPartition1); // Asegúrate de liberar la memoria del elemento desencolado.
         }
         char *dequeuedDataCpuPartition2 = dequeue(mp_queue_productor, 3);
@@ -183,6 +201,8 @@ void send_message_to_consumidor(int consumidor_socket, int opcion)
             printf("Elemento desencolado de \"CPU\" en la partición %d: %s\n", 2, dequeuedDataCpuPartition2);
             if (send(consumidor_socket, dequeuedDataCpuPartition2, sizeof(dequeuedDataCpuPartition2), 0) == -1)
                 perror("Error al enviar el mensaje");
+            if (persistencia == 1)
+                escribirEnArchivoPersistente(dequeuedDataCpuPartition2);
             free(dequeuedDataCpuPartition2); // Asegúrate de liberar la memoria del elemento desencolado.
         }
     }
