@@ -7,22 +7,23 @@
 pthread_mutex_t mutex2;
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc != 4)
     {
-        printf("Uso: %s <puerto_broker> <puerto_consumidor>\n", argv[0]);
+        printf("Uso: %s <puerto_broker> <puerto_consumidor_lectura> <puerto_consumidor_envio>\n", argv[0]);
         return 1;
     }
 
     int broker_port_productor = atoi(argv[1]);
-    int broker_port_consumidor = atoi(argv[2]);
-    if (broker_port_productor <= 0 || broker_port_consumidor <= 0)
+    int broker_port_consumidor_read = atoi(argv[2]);
+    int broker_port_consumidor_send = atoi(argv[3]);
+    if (broker_port_productor <= 0 || broker_port_consumidor_read <= 0 || broker_port_consumidor_send <= 0)
     {
         printf("Error: Puertos inválidos\n");
         return 1;
     }
 
-    int broker_sock_productor, broker_sock_consumidor;
-    struct sockaddr_in broker_addr_productor, broker_addr_consumidor;
+    int broker_sock_productor, broker_sock_consumidor_read, broker_sock_consumidor_send;
+    struct sockaddr_in broker_addr_productor, broker_addr_consumidor_read, broker_addr_consumidor_send;
 
     broker_sock_productor = socket(AF_INET, SOCK_STREAM, 0);
     if (broker_sock_productor == -1)
@@ -30,8 +31,16 @@ int main(int argc, char *argv[])
         printf("Error: No se pudo crear el socket para el productor\n");
         return 1;
     }
-    broker_sock_consumidor = socket(AF_INET, SOCK_STREAM, 0);
-    if (broker_sock_consumidor == -1)
+
+    broker_sock_consumidor_read = socket(AF_INET, SOCK_STREAM, 0);
+    if (broker_sock_consumidor_read == -1)
+    {
+        printf("Error: No se pudo crear el socket para el consumidor\n");
+        return 1;
+    }
+
+    broker_sock_consumidor_send = socket(AF_INET, SOCK_STREAM, 0);
+    if (broker_sock_consumidor_send == -1)
     {
         printf("Error: No se pudo crear el socket para el consumidor\n");
         return 1;
@@ -41,9 +50,13 @@ int main(int argc, char *argv[])
     broker_addr_productor.sin_addr.s_addr = INADDR_ANY;
     broker_addr_productor.sin_port = htons(broker_port_productor);
 
-    broker_addr_consumidor.sin_family = AF_INET;
-    broker_addr_consumidor.sin_addr.s_addr = INADDR_ANY;
-    broker_addr_consumidor.sin_port = htons(broker_port_consumidor);
+    broker_addr_consumidor_read.sin_family = AF_INET;
+    broker_addr_consumidor_read.sin_addr.s_addr = INADDR_ANY;
+    broker_addr_consumidor_read.sin_port = htons(broker_port_consumidor_read);
+
+    broker_addr_consumidor_send.sin_family = AF_INET;
+    broker_addr_consumidor_send.sin_addr.s_addr = INADDR_ANY;
+    broker_addr_consumidor_send.sin_port = htons(broker_port_consumidor_send);
 
     if (bind(broker_sock_productor, (struct sockaddr *)&broker_addr_productor, sizeof(broker_addr_productor)) < 0)
     {
@@ -51,16 +64,25 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (bind(broker_sock_consumidor, (struct sockaddr *)&broker_addr_consumidor, sizeof(broker_addr_consumidor)) < 0)
+    if (bind(broker_sock_consumidor_read, (struct sockaddr *)&broker_addr_consumidor_read, sizeof(broker_addr_consumidor_read)) < 0)
     {
         printf("Error: Try to use a valid port\n");
         return 1;
     }
 
+    if (bind(broker_sock_consumidor_send, (struct sockaddr *)&broker_addr_consumidor_send, sizeof(broker_addr_consumidor_send)) < 0)
+    {
+        printf("AQUIIII\n");
+        printf("Error: Try to use a valid port\n");
+        return 1;
+    }
+
     listen(broker_sock_productor, 10);
-    listen(broker_sock_consumidor, 10);
-    printf("Successfully initialized broker using the port: %d\n", broker_port_productor);
-    printf("Successfully initialized broker using the port: %d\n", broker_port_consumidor);
+    listen(broker_sock_consumidor_read, 10);
+    listen(broker_sock_consumidor_send, 10);
+    printf("Broker inicializado en el puerto: %d\n", broker_port_productor);
+    printf("Puerto del consumidor escuchando en: %d\n", broker_port_consumidor_read);
+    printf("Puerto del consumidor listo para enviar mensajes en: %d\n", broker_port_consumidor_send);
 
     if (pthread_mutex_init(&mutex2, NULL) != 0)
     {
@@ -68,8 +90,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    pthread_t productor_connections_thread_id;
-    pthread_t consumidor_connections_thread_id;
+    pthread_t productor_connections_thread_id, consumidor_connections_read_thread_id, consumidor_connections_send_thread_id;
     // Creando la cola multi-particiones
     MultiPartitionQueue *mp_queue = createMultiPartitionQueue(4);
     mp_queue_productor = createMultiPartitionQueue(4);
@@ -82,7 +103,12 @@ int main(int argc, char *argv[])
         printf("Error creating connections thread\n");
         return 1;
     }
-    if (pthread_create(&consumidor_connections_thread_id, NULL, handle_consumidor_connections, (void *)&broker_sock_consumidor) != 0)
+    if (pthread_create(&consumidor_connections_read_thread_id, NULL, handle_consumidor_connections_read, (void *)&broker_sock_consumidor_read) != 0)
+    {
+        printf("Error creating connections thread\n");
+        return 1;
+    }
+    if (pthread_create(&consumidor_connections_send_thread_id, NULL, handle_consumidor_connections_send, (void *)&broker_sock_consumidor_send) != 0)
     {
         printf("Error creating connections thread\n");
         return 1;
@@ -95,6 +121,7 @@ int main(int argc, char *argv[])
     pthread_mutex_destroy(&mutex2);
 
     close(broker_sock_productor);
-    close(broker_sock_consumidor);
+    close(broker_sock_consumidor_read);
+    close(broker_sock_consumidor_send);
     return 0;
 }
