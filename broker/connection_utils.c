@@ -36,11 +36,13 @@ void *handle_consumidor(void *arg)
     }
     solicitud[read_size] = '\0';
 
-    printf("\nMensaje recibido del consumidor: %s\n", solicitud);
+    printf("\nSolicitud recibida del consumidor: %s\n", solicitud);
 
     char *solicitud_especifica = strtok(solicitud, "/");
-    solicitud_especifica = strtok(NULL, "/");
+    solicitud_especifica = strtok(NULL, "-");
 
+    char *persistencia = strtok(NULL, "-");
+    printf("USAR PERSISTENCIA??? %s\n", persistencia); // Si es 1, escribimos en un archivo!!!
     opcion = generateOption(solicitud_especifica);
     while (1)
     {
