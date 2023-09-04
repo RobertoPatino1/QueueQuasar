@@ -44,21 +44,9 @@ void *handle_consumidor_read(void *arg)
 
 void *handle_consumidor_send(void *arg)
 {
+    int consumidor_sock = *(int *)arg;
     printf("SUCCESSSS\n");
-    // int consumidor_sock = *(int *)arg;
-    // char message[MAX_MESSAGE_LENGTH];
-    // int read_size;
-    // while ((read_size = recv(consumidor_sock, message, sizeof(message), 0)) > 0)
-    // {
-    //     message[read_size] = '\0';
-    //     pthread_mutex_lock(&mutex);
-    //     printf("Mensaje recibido del consumidor: %s\n", message);
-    //     pthread_mutex_unlock(&mutex);
-    // }
-    // printf("El consumidor se ha desconectado\n");
-    // close(consumidor_sock);
-    // free(arg);
-    // pthread_exit(NULL);
+    send_message_to_consumidor(consumidor_sock, "HOLA MUNDOOOOO!!!!");
 }
 
 void *handle_productor_connections(void *arg)

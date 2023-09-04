@@ -5,8 +5,10 @@
 #include <unistd.h>
 #include "connection_utils.h"
 pthread_mutex_t mutex2;
+int consumidor_conectado;
 int main(int argc, char *argv[])
 {
+    consumidor_conectado = 0;
     if (argc != 4)
     {
         printf("Uso: %s <puerto_broker> <puerto_consumidor_lectura> <puerto_consumidor_envio>\n", argv[0]);
