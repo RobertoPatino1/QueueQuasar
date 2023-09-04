@@ -70,10 +70,10 @@ int main(int argc, char *argv[])
         if (bytes_recibidos <= 0)
         {
             perror("Se ha cerrado la conexion del broker");
-            break; // Salir del bucle si se cierra la conexion
+            break; // Salimos del bucle si se rompe la conexion
         }
         mensaje_recibido[bytes_recibidos] = '\0';
-        printf("Respuesta recibida del broker: %s\n", mensaje_recibido);
+        printf("\nRespuesta recibida del broker: %s\n\n", mensaje_recibido);
     }
 
     // Cerrar el socket y finalizar
