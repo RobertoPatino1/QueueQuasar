@@ -25,18 +25,21 @@ void *handle_productor(void *arg)
 void *handle_consumidor(void *arg)
 {
     int consumidor_sock = *(int *)arg;
-    char message[MAX_MESSAGE_LENGTH];
+    char solicitud[MAX_MESSAGE_LENGTH];
     int read_size;
-    pthread_mutex_lock(&mutex);
-    read_size = recv(consumidor_sock, message, sizeof(message), 0);
+    read_size = recv(consumidor_sock, solicitud, sizeof(solicitud), 0);
     if (read_size == -1)
     {
         perror("Se ha cerrado la conexion");
         close(consumidor_sock);
     }
-    message[read_size] = '\0';
+    solicitud[read_size] = '\0';
 
-    printf("Mensaje recibido del consumidor: %s\n", message);
+    printf("Mensaje recibido del consumidor: %s\n", solicitud);
+
+    char *solicitud_especifica = strtok(solicitud, "/");
+    solicitud_especifica = strtok(NULL, "/");
+    printf("LA SOLICITUD ESPECIFICA ES: %s\n", solicitud_especifica);
 
     // #################################
     // AQUI COLOCAR LA LOGICA DE DESENCOLADO
@@ -44,15 +47,18 @@ void *handle_consumidor(void *arg)
 
     while (1)
     {
-        char mensaje_enviado[] = "Mensaje desde BROKERRRR!!!\n";
-        if (send(consumidor_sock, mensaje_enviado, sizeof(mensaje_enviado), 0) == -1)
-        {
-            perror("Error al enviar el mensaje");
-            break; // Salir del bucle si hay un error
-        }
+        // char mensaje_enviado[] = "Mensaje desde BROKERRRR!!!\n";
+        // if (send(consumidor_sock, mensaje_enviado, sizeof(mensaje_enviado), 0) == -1)
+        // {
+        //     perror("Error al enviar el mensaje");
+        //     break; // Salir del bucle si hay un error
+        // }
+        send_message_to_consumidor(consumidor_sock, solicitud, "HOLA MUNDO!");
         sleep(5); // Esperar 1 segundo entre cada envío
     }
-    pthread_mutex_unlock(&mutex);
+
+    printf("El productor se ha desconectado\n");
+    close(consumidor_sock);
     pthread_exit(NULL);
 }
 
@@ -127,15 +133,13 @@ void *handle_consumidor_connections(void *arg)
     return NULL;
 }
 
-int send_message_to_consumidor(int consumidor_socket, const char *message)
+void send_message_to_consumidor(int consumidor_socket, const char *solicitud_especifica, const char *message)
 {
-    printf("Se enviara el mensaje al consumidor: %s\n", message);
-    if (send(consumidor_socket, message, strlen(message), 0) == -1)
+
+    if (send(consumidor_socket, message, sizeof(message), 0) == -1)
     {
-        perror("Error sending message to consumidor");
-        return -1;
+        perror("Error al enviar el mensaje");
     }
-    return 0;
 }
 
 void splitAndEnqueue(char *cadena)

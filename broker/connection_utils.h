@@ -24,6 +24,5 @@ void *handle_consumidor(void *arg);
 void *handle_productor_connections(void *arg);
 void *handle_consumidor_connections(void *arg);
 void splitAndEnqueue(char *cadena);
-int send_message_to_consumidor(int consumidor_socket, const char *message);
-
+void send_message_to_consumidor(int consumidor_socket, const char *solicitud, const char *message);
 #endif
