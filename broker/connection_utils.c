@@ -1,24 +1,23 @@
 #include "connection_utils.h"
-pthread_mutex_t mutex;
 void *handle_productor(void *arg)
 {
-
     struct ThreadContent *data = (struct ThreadContent *)arg;
     int productor_sock = (int)data->broker_sock_productor;
+    printf("%d\n", data->broker_sock_productor);
     MultiPartitionQueue *mp_queue = data->mp_queue;
+
     char message[MAX_MESSAGE_LENGTH];
     int read_size;
-
     while ((read_size = recv(productor_sock, message, sizeof(message), 0)) > 0)
     {
 
         message[read_size] = '\0';
-        printf("\n");
-        printf(">>> Mensaje recibido del productor: %s\n", message);
+        printf("Mensaje recibido del productor: %s\n", message);
         pthread_mutex_lock(&mutex);
 
         splitAndEnqueue(message, mp_queue);
 
+        sleep(2);
         pthread_mutex_unlock(&mutex);
     }
 
@@ -30,7 +29,6 @@ void *handle_productor(void *arg)
 
 void *handle_productor_connections(void *arg)
 {
-
     struct ThreadContent *data = (struct ThreadContent *)arg;
     int broker_sock_productor = (int)data->broker_sock_productor;
 
@@ -120,5 +118,4 @@ void splitAndEnqueue(char *cadena, MultiPartitionQueue *mp_queue)
         enqueue(mp_queue, "cpu", partitionNumber + 1, data2);
         printPartitionContents(mp_queue, "cpu", partitionNumber + 1);
     }
-    free(data2);
 }
