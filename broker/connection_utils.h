@@ -20,12 +20,9 @@ struct ThreadContent
 };
 
 void *handle_productor(void *arg);
-void *handle_consumidor_read(void *arg);
-void *handle_consumidor_send(void *arg);
+void *handle_consumidor(void *arg);
 void *handle_productor_connections(void *arg);
-void *handle_consumidor_connections_read(void *arg);
-void *handle_consumidor_connections_send(void *arg);
-int initialize_broker_socket(int port);
+void *handle_consumidor_connections(void *arg);
 void splitAndEnqueue(char *cadena);
 int send_message_to_consumidor(int consumidor_socket, const char *message);
 
