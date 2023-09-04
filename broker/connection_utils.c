@@ -26,6 +26,7 @@ void *handle_consumidor(void *arg)
 {
     int consumidor_sock = *(int *)arg;
     char solicitud[MAX_MESSAGE_LENGTH];
+    int opcion;
     int read_size;
     read_size = recv(consumidor_sock, solicitud, sizeof(solicitud), 0);
     if (read_size == -1)
@@ -39,21 +40,11 @@ void *handle_consumidor(void *arg)
 
     char *solicitud_especifica = strtok(solicitud, "/");
     solicitud_especifica = strtok(NULL, "/");
-    printf("LA SOLICITUD ESPECIFICA ES: %s\n", solicitud_especifica);
 
-    // #################################
-    // AQUI COLOCAR LA LOGICA DE DESENCOLADO
-    // #################################
-
+    opcion = generateOption(solicitud_especifica);
     while (1)
     {
-        // char mensaje_enviado[] = "Mensaje desde BROKERRRR!!!\n";
-        // if (send(consumidor_sock, mensaje_enviado, sizeof(mensaje_enviado), 0) == -1)
-        // {
-        //     perror("Error al enviar el mensaje");
-        //     break; // Salir del bucle si hay un error
-        // }
-        send_message_to_consumidor(consumidor_sock, solicitud, "HOLA MUNDO!");
+        send_message_to_consumidor(consumidor_sock, opcion);
         sleep(5); // Esperar 1 segundo entre cada envío
     }
 
@@ -133,12 +124,66 @@ void *handle_consumidor_connections(void *arg)
     return NULL;
 }
 
-void send_message_to_consumidor(int consumidor_socket, const char *solicitud_especifica, const char *message)
+int generateOption(char *solicitud_especifica)
 {
-
-    if (send(consumidor_socket, message, sizeof(message), 0) == -1)
+    int opcion = -1;
+    printf("LA SOLICITUD ESPECIFICA ES %s\n", solicitud_especifica);
+    if (strcmp(solicitud_especifica, "cpu") == 0)
     {
-        perror("Error al enviar el mensaje");
+        opcion = 2; // Enviamos las 2 metricas
+    }
+    else if (strcmp(solicitud_especifica, "memoria") == 0)
+    {
+        opcion = 1; // Enviamos solo la metrica de memoria
+    }
+    else
+    {
+        opcion = 0; // Enviamos la metrica de CPU
+    }
+    return opcion;
+}
+void send_message_to_consumidor(int consumidor_socket, int opcion)
+{
+    printf("---->%d\n", opcion);
+    if (opcion == 1 || opcion == 0)
+    {
+        // Desencolamos solo la metrica memoria y la enviamos
+        char *dequeuedDataMemoryPartition1 = dequeue(mp_queue_productor, "memoria", 0);
+        if (dequeuedDataMemoryPartition1 != NULL)
+        {
+            printf("Elemento desencolado de \"memoria\" en la partición %d: %s\n", 1, dequeuedDataMemoryPartition1);
+            if (send(consumidor_socket, dequeuedDataMemoryPartition1, sizeof(dequeuedDataMemoryPartition1), 0) == -1)
+                perror("Error al enviar el mensaje");
+            free(dequeuedDataMemoryPartition1); // Asegúrate de liberar la memoria del elemento desencolado.
+        }
+        char *dequeuedDataMemoryPartition2 = dequeue(mp_queue_productor, "memoria", 1);
+        if (dequeuedDataMemoryPartition2 != NULL)
+        {
+            printf("Elemento desencolado de \"memoria\" en la partición %d: %s\n", 2, dequeuedDataMemoryPartition2);
+            if (send(consumidor_socket, dequeuedDataMemoryPartition2, sizeof(dequeuedDataMemoryPartition2), 0) == -1)
+                perror("Error al enviar el mensaje");
+            free(dequeuedDataMemoryPartition2); // Asegúrate de liberar la memoria del elemento desencolado.
+        }
+    }
+    if (opcion == 2 || opcion == 0)
+    {
+        // Desencolamos la metrica cpu y la enviamos
+        char *dequeuedDataCpuPartition1 = dequeue(mp_queue_productor, "cpu", 2);
+        if (dequeuedDataCpuPartition1 != NULL)
+        {
+            printf("Elemento desencolado de \"CPU\" en la partición %d: %s\n", 1, dequeuedDataCpuPartition1);
+            if (send(consumidor_socket, dequeuedDataCpuPartition1, sizeof(dequeuedDataCpuPartition1), 0) == -1)
+                perror("Error al enviar el mensaje");
+            free(dequeuedDataCpuPartition1); // Asegúrate de liberar la memoria del elemento desencolado.
+        }
+        char *dequeuedDataCpuPartition2 = dequeue(mp_queue_productor, "cpu", 3);
+        if (dequeuedDataCpuPartition2 != NULL)
+        {
+            printf("Elemento desencolado de \"CPU\" en la partición %d: %s\n", 2, dequeuedDataCpuPartition2);
+            if (send(consumidor_socket, dequeuedDataCpuPartition2, sizeof(dequeuedDataCpuPartition2), 0) == -1)
+                perror("Error al enviar el mensaje");
+            free(dequeuedDataCpuPartition2); // Asegúrate de liberar la memoria del elemento desencolado.
+        }
     }
 }
 
@@ -183,19 +228,6 @@ void splitAndEnqueue(char *cadena)
     {
         enqueue(mp_queue_productor, "memoria", partitionNumber - 1, formatted_data);
         printPartitionContents(mp_queue_productor, "memoria", partitionNumber - 1);
-        // ###########################################################################
-        //  Ahora, vamos a desencolar un elemento de "memoria" en la misma partición
-        // ###########################################################################
-        //  char *dequeuedData = dequeue(mp_queue_productor, "memoria", partitionNumber - 1);
-        //  if (dequeuedData != NULL)
-        //  {
-        //      printf("Elemento desencolado de \"memoria\" en la partición %d: %s\n", partitionNumber - 1, dequeuedData);
-        //      free(dequeuedData); // Asegúrate de liberar la memoria del elemento desencolado.
-        //  }
-        //  else
-        //  {
-        //      printf("No hay elementos en la cola \"memoria\" en la partición %d\n", partitionNumber - 1);
-        //  }
     }
     else if (strcmp(formatted_section_name, "cpu") == 0)
     {
