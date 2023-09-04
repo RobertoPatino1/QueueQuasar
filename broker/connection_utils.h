@@ -11,7 +11,7 @@
 
 #define MAX_MESSAGE_LENGTH 256
 
-pthread_mutex_t mutex;
+//pthread_mutex_t mutex;
 
 struct ThreadContent
 {
