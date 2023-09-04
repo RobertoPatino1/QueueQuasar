@@ -20,7 +20,9 @@ struct ThreadContent
 };
 
 void *handle_productor(void *arg);
+void *handle_consumidor(void *arg);
 void *handle_productor_connections(void *arg);
+void *handle_consumidor_connections(void *arg);
 int initialize_broker_socket(int port);
 void splitAndEnqueue(char *cadena, MultiPartitionQueue *mp_queue);
 

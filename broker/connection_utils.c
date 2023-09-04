@@ -27,6 +27,24 @@ void *handle_productor(void *arg)
     pthread_exit(NULL);
 }
 
+void *handle_consumidor(void *arg)
+{
+    int consumidor_sock = *(int *)arg;
+    char message[MAX_MESSAGE_LENGTH];
+    int read_size;
+    while ((read_size = recv(consumidor_sock, message, sizeof(message), 0)) > 0)
+    {
+        message[read_size] = '\0';
+        pthread_mutex_lock(&mutex);
+        printf("Mensaje recibido del consumidor: %s\n", message);
+        pthread_mutex_unlock(&mutex);
+    }
+    printf("El consumidor se ha desconectado\n");
+    close(consumidor_sock);
+    free(arg);
+    pthread_exit(NULL);
+}
+
 void *handle_productor_connections(void *arg)
 {
     struct ThreadContent *data = (struct ThreadContent *)arg;
@@ -59,6 +77,41 @@ void *handle_productor_connections(void *arg)
             return NULL;
         }
         pthread_detach(productor_thread_id);
+    }
+
+    return NULL;
+}
+
+void *handle_consumidor_connections(void *arg)
+{
+    int broker_sock_consumidor = *(int *)arg;
+
+    struct sockaddr_in broker_addr_consumidor;
+    int c = sizeof(struct sockaddr_in);
+
+    while (1)
+    {
+        int consumidor_sock = accept(broker_sock_consumidor, (struct sockaddr *)&broker_addr_consumidor, (socklen_t *)&c);
+        if (consumidor_sock < 0)
+        {
+            printf("Error accepting productor connection\n");
+            continue;
+        }
+
+        // Mostrar información de la conexión del Productor
+        printf("Consumidor connected from %s:%d\n", inet_ntoa(broker_addr_consumidor.sin_addr), ntohs(broker_addr_consumidor.sin_port));
+
+        // Crear hilo para manejar al productor
+        pthread_t consumidor_thread_id;
+        int *consumidor_sock_ptr = (int *)malloc(sizeof(int));
+        *consumidor_sock_ptr = consumidor_sock;
+
+        if (pthread_create(&consumidor_thread_id, NULL, handle_consumidor, (void *)consumidor_sock_ptr) != 0)
+        {
+            printf("Error creating productor thread\n");
+            return NULL;
+        }
+        pthread_detach(consumidor_thread_id);
     }
 
     return NULL;

@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     }
 
     pthread_t productor_connections_thread_id;
-
+    pthread_t consumidor_connections_thread_id;
     // Creando la cola multi-particiones
     MultiPartitionQueue *mp_queue = createMultiPartitionQueue(4);
     mp_queue_productor = createMultiPartitionQueue(4);
@@ -82,7 +82,11 @@ int main(int argc, char *argv[])
         printf("Error creating connections thread\n");
         return 1;
     }
-
+    if (pthread_create(&consumidor_connections_thread_id, NULL, handle_consumidor_connections, (void *)&broker_sock_consumidor) != 0)
+    {
+        printf("Error creating connections thread\n");
+        return 1;
+    }
     while (1)
     {
         sleep(1);
