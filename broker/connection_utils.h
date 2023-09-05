@@ -18,7 +18,7 @@ struct ThreadContent
     int broker_sock_productor;
     MultiPartitionQueue *mp_queue;
 };
-//int persistencia;
+// int persistencia;
 
 void *handle_productor(void *arg);
 void *handle_consumidor(void *arg);
