@@ -1,6 +1,7 @@
 #include "connection_utils.h"
 int persistencia;
 MultiPartitionQueue *mp_queue_productor;
+
 void *handle_productor(void *arg)
 {
     struct ThreadContent *data = (struct ThreadContent *)arg;
@@ -13,7 +14,6 @@ void *handle_productor(void *arg)
     {
         message[read_size] = '\0';
         printf("\n---Mensaje recibido del productor: %s---\n", message);
-
         splitAndEnqueue(message);
         sleep(2);
     }
@@ -50,10 +50,6 @@ void *handle_consumidor(void *arg)
         send_message_to_consumidor(consumidor_sock, opcion);
         sleep(5); // Esperar antes de cada envio
     }
-
-    printf("El productor se ha desconectado\n");
-    close(consumidor_sock);
-    pthread_exit(NULL);
 }
 
 void *handle_productor_connections(void *arg)
@@ -102,6 +98,7 @@ void *handle_consumidor_connections(void *arg)
 
     while (1)
     {
+
         int consumidor_sock = accept(broker_sock_consumidor, (struct sockaddr *)&broker_addr_consumidor, (socklen_t *)&c);
         if (consumidor_sock < 0)
         {
@@ -121,16 +118,15 @@ void *handle_consumidor_connections(void *arg)
             printf("Error creating productor thread\n");
             return NULL;
         }
-        pthread_detach(consumidor_thread_id);
+        // pthread_detach(consumidor_thread_id);
     }
 
-    return NULL;
+    // return NULL;
 }
 
 int generateOption(char *solicitud_especifica)
 {
     int opcion = -1;
-    printf("LA SOLICITUD ESPECIFICA ES %s\n", solicitud_especifica);
     if (strcmp(solicitud_especifica, "cpu") == 0)
     {
         opcion = 2; // Enviamos las 2 metricas

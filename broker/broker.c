@@ -79,20 +79,22 @@ int main(int argc, char *argv[])
         printf("Error creating connections thread\n");
         return 1;
     }
-    if (pthread_create(&consumidor_connections_thread_id, NULL, handle_consumidor_connections, (void *)&broker_sock_consumidor) != 0)
+    while (1)
     {
-        printf("Error creating connections thread\n");
-        return 1;
+        if (pthread_create(&consumidor_connections_thread_id, NULL, handle_consumidor_connections, (void *)&broker_sock_consumidor) != 0)
+        {
+            printf("Error creating connections thread\n");
+            return 1;
+        }
     }
 
     while (1)
     {
         sleep(1);
     }
-
     pthread_mutex_destroy(&mutex2);
 
     close(broker_sock_productor);
-    // close(broker_sock_consumidor);
+    close(broker_sock_consumidor);
     return 0;
 }

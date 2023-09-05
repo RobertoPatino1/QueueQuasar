@@ -17,6 +17,6 @@ multiPartitionQueue.o: multiPartitionQueue.c multiPartitionQueue.h
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f broker *.o
+	rm -f broker *.o persistence.txt
 
 .PHONY: all clean
