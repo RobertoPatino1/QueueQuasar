@@ -1,5 +1,6 @@
 #include "connection_utils.h"
-
+int persistencia;
+MultiPartitionQueue *mp_queue_productor;
 void *handle_productor(void *arg)
 {
     struct ThreadContent *data = (struct ThreadContent *)arg;

@@ -1,8 +1,3 @@
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
 #include "connection_utils.h"
 pthread_mutex_t mutex2;
 int main(int argc, char *argv[])

@@ -11,14 +11,14 @@
 
 #define MAX_MESSAGE_LENGTH 256
 
-pthread_mutex_t mutex;
-MultiPartitionQueue *mp_queue_productor;
+extern pthread_mutex_t mutex;
+extern MultiPartitionQueue *mp_queue_productor;
 struct ThreadContent
 {
     int broker_sock_productor;
     MultiPartitionQueue *mp_queue;
 };
-int persistencia;
+//int persistencia;
 
 void *handle_productor(void *arg);
 void *handle_consumidor(void *arg);
