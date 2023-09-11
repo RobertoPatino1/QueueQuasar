@@ -5,7 +5,7 @@ MultiPartitionQueue *createMultiPartitionQueue(int numPartitions)
     MultiPartitionQueue *queue = (MultiPartitionQueue *)malloc(sizeof(MultiPartitionQueue));
     if (queue == NULL)
     {
-        perror("Error creando la cola multi particiones");
+        perror("Error creating Multi-partition queue");
         return NULL;
     }
 
@@ -13,7 +13,7 @@ MultiPartitionQueue *createMultiPartitionQueue(int numPartitions)
     queue->partitions = (Partition *)malloc(numPartitions * sizeof(Partition));
     if (queue->partitions == NULL)
     {
-        perror("Error al crear las particiones");
+        perror("Error creating partitions");
         free(queue);
         return NULL;
     }
@@ -23,7 +23,7 @@ MultiPartitionQueue *createMultiPartitionQueue(int numPartitions)
         queue->partitions[i].queue = (Queue *)malloc(sizeof(Queue));
         if (queue->partitions[i].queue == NULL)
         {
-            perror("Error creando las colas de particiones");
+            perror("Error creating Multi-partition queue");
             freeMultiPartitionQueue(queue);
             return NULL;
         }
@@ -44,7 +44,7 @@ void enqueue(MultiPartitionQueue *queue, char *sectionName, int partitionIndex, 
     {
         partitionNumber = partitionIndex - 1;
     }
-    printf(">>>Encolando mensaje: \"%s\" en %s, particion %d\n", data, sectionName, partitionNumber);
+    printf(">>>Enqueuing message: \"%s\" at %s, partition %d\n", data, sectionName, partitionNumber);
     if (partitionIndex >= 0 && partitionIndex < queue->numPartitions)
     {
         QueueNode *newNode = (QueueNode *)malloc(sizeof(QueueNode));
@@ -106,7 +106,7 @@ void printPartitionContents(MultiPartitionQueue *queue, char *sectionName, int p
         {
             partitionNumber = partitionIndex - 1;
         }
-        printf("Contenido de %s, particion %d:\n", sectionName, partitionNumber);
+        printf("Section %s, partition content %d:\n", sectionName, partitionNumber);
         QueueNode *current = queue->partitions[partitionIndex].queue->front;
         printf("[");
         while (current != NULL)

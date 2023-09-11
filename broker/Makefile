@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -g  # Agregamos la opción -g para habilitar la información de depuración
+CFLAGS = -Wall -Wextra -std=c99 -g  
 LDFLAGS = -pthread
 
 all: broker

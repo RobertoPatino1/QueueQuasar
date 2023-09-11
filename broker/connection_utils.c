@@ -1,213 +1,208 @@
 #include "connection_utils.h"
-int persistencia;
-MultiPartitionQueue *mp_queue_productor;
+int persistence;
+MultiPartitionQueue *mp_queue_producer;
 
-void *handle_productor(void *arg)
+void *handle_producer(void *arg)
 {
     struct ThreadContent *data = (struct ThreadContent *)arg;
-    int productor_sock = (int)data->broker_sock_productor;
+    int producer_sock = (int)data->broker_sock_producer;
 
     char message[MAX_MESSAGE_LENGTH];
     int read_size;
 
-    while ((read_size = recv(productor_sock, message, sizeof(message), 0)) > 0)
+    while ((read_size = recv(producer_sock, message, sizeof(message), 0)) > 0)
     {
         message[read_size] = '\0';
-        printf("\n---Mensaje recibido del productor: %s---\n", message);
+        printf("\n---Message recieved from producer: %s---\n", message);
         splitAndEnqueue(message);
         sleep(2);
     }
 
-    printf("El productor se ha desconectado\n");
-    close(productor_sock);
+    printf("Producer disconnected\n");
+    close(producer_sock);
     pthread_exit(NULL);
 }
 
-void *handle_consumidor(void *arg)
+void *handle_consumer(void *arg)
 {
-    int consumidor_sock = *(int *)arg;
-    char solicitud[MAX_MESSAGE_LENGTH];
-    int opcion;
+    int consumer_sock = *(int *)arg;
+    char request[MAX_MESSAGE_LENGTH];
+    int option;
     int read_size;
-    read_size = recv(consumidor_sock, solicitud, sizeof(solicitud), 0);
+    read_size = recv(consumer_sock, request, sizeof(request), 0);
     if (read_size == -1)
     {
-        perror("Se ha cerrado la conexion");
-        close(consumidor_sock);
+        perror("Conection closed");
+        close(consumer_sock);
     }
-    solicitud[read_size] = '\0';
+    request[read_size] = '\0';
 
-    printf("\nSolicitud recibida del consumidor: %s\n", solicitud);
+    printf("\nRequest recieved from consumer: %s\n", request);
 
-    char *solicitud_especifica = strtok(solicitud, "/");
-    solicitud_especifica = strtok(NULL, "-");
+    char *sepecific_request = strtok(request, "/");
+    sepecific_request = strtok(NULL, "-");
 
-    persistencia = atoi(strtok(NULL, "-"));
-    printf("\nUsar persistencia? %d\n", persistencia); // Si es 1, escribimos en un archivo!!!
-    opcion = generateOption(solicitud_especifica);
+    persistence = atoi(strtok(NULL, "-"));
+    printf("\nUse persistence? %d\n", persistence); // Si es 1, escribimos en un archivo!!!
+    option = generateOption(sepecific_request);
     while (1)
     {
-        send_message_to_consumidor(consumidor_sock, opcion);
-        sleep(5); // Esperar antes de cada envio
+        send_message_to_consumer(consumer_sock, option);
+        sleep(5);
     }
 }
 
-void *handle_productor_connections(void *arg)
+void *handle_producer_connections(void *arg)
 {
     struct ThreadContent *data = (struct ThreadContent *)arg;
-    int broker_sock_productor = (int)data->broker_sock_productor;
+    int broker_sock_producer = (int)data->broker_sock_producer;
 
-    struct sockaddr_in broker_addr_productor;
+    struct sockaddr_in broker_addr_producer;
     int c = sizeof(struct sockaddr_in);
 
     while (1)
     {
-        int productor_sock = accept(broker_sock_productor, (struct sockaddr *)&broker_addr_productor, (socklen_t *)&c);
-        if (productor_sock < 0)
+        int producer_sock = accept(broker_sock_producer, (struct sockaddr *)&broker_addr_producer, (socklen_t *)&c);
+        if (producer_sock < 0)
         {
-            printf("Error accepting productor connection\n");
+            printf("Error accepting producer connection\n");
             continue;
         }
+        printf("Producer connected from %s:%d\n", inet_ntoa(broker_addr_producer.sin_addr), ntohs(broker_addr_producer.sin_port));
 
-        // Mostrar información de la conexión del Productor
-        printf("Productor connected from %s:%d\n", inet_ntoa(broker_addr_productor.sin_addr), ntohs(broker_addr_productor.sin_port));
+        pthread_t producer_thread_id;
+        int *producer_sock_ptr = (int *)malloc(sizeof(int));
+        *producer_sock_ptr = producer_sock;
+        data->broker_sock_producer = *producer_sock_ptr;
 
-        // Crear hilo para manejar al productor
-        pthread_t productor_thread_id;
-        int *productor_sock_ptr = (int *)malloc(sizeof(int));
-        *productor_sock_ptr = productor_sock;
-        data->broker_sock_productor = *productor_sock_ptr;
-
-        if (pthread_create(&productor_thread_id, NULL, handle_productor, (void *)data) != 0)
+        if (pthread_create(&producer_thread_id, NULL, handle_producer, (void *)data) != 0)
         {
-            printf("Error creating productor thread\n");
+            printf("Error creating producer thread\n");
             return NULL;
         }
-        pthread_detach(productor_thread_id);
+        pthread_detach(producer_thread_id);
     }
 
     return NULL;
 }
 
-void *handle_consumidor_connections(void *arg)
+void *handle_consumer_connections(void *arg)
 {
-    int broker_sock_consumidor = *(int *)arg;
+    int broker_sock_consumer = *(int *)arg;
 
-    struct sockaddr_in broker_addr_consumidor;
+    struct sockaddr_in broker_addr_consumer;
     int c = sizeof(struct sockaddr_in);
 
     while (1)
     {
 
-        int consumidor_sock = accept(broker_sock_consumidor, (struct sockaddr *)&broker_addr_consumidor, (socklen_t *)&c);
-        if (consumidor_sock < 0)
+        int consumer_sock = accept(broker_sock_consumer, (struct sockaddr *)&broker_addr_consumer, (socklen_t *)&c);
+        if (consumer_sock < 0)
         {
-            printf("Error accepting productor connection\n");
+            printf("Error accepting producer connection\n");
             continue;
         }
 
-        // Mostrar información de la conexión del Productor
-        printf("Consumidor conectado desde %s:%d\n", inet_ntoa(broker_addr_consumidor.sin_addr), ntohs(broker_addr_consumidor.sin_port));
+        printf("Consumer connected from %s:%d\n", inet_ntoa(broker_addr_consumer.sin_addr), ntohs(broker_addr_consumer.sin_port));
 
-        pthread_t consumidor_thread_id;
-        int *consumidor_sock_ptr = (int *)malloc(sizeof(int));
-        *consumidor_sock_ptr = consumidor_sock;
+        pthread_t consumer_thread_id;
+        int *consumer_sock_ptr = (int *)malloc(sizeof(int));
+        *consumer_sock_ptr = consumer_sock;
 
-        if (pthread_create(&consumidor_thread_id, NULL, handle_consumidor, (void *)consumidor_sock_ptr) != 0)
+        if (pthread_create(&consumer_thread_id, NULL, handle_consumer, (void *)consumer_sock_ptr) != 0)
         {
             printf("Error creating productor thread\n");
             return NULL;
         }
-        // pthread_detach(consumidor_thread_id);
+        pthread_detach(consumer_thread_id);
     }
 
-    // return NULL;
+    return NULL;
 }
 
-int generateOption(char *solicitud_especifica)
+int generateOption(char *specific_request)
 {
-    int opcion = -1;
-    if (strcmp(solicitud_especifica, "cpu") == 0)
+    int option = -1;
+    if (strcmp(specific_request, "cpu") == 0)
     {
-        opcion = 2; // Enviamos las 2 metricas
+        option = 2;
     }
-    else if (strcmp(solicitud_especifica, "memoria") == 0)
+    else if (strcmp(specific_request, "memory") == 0)
     {
-        opcion = 1; // Enviamos solo la metrica de memoria
+        option = 1;
     }
     else
     {
-        opcion = 0; // Enviamos la metrica de CPU
+        option = 0;
     }
-    return opcion;
+    return option;
 }
 
-void escribirEnArchivoPersistente(const char *cadena)
+void writeOnPersistentFile(const char *string)
 {
-    FILE *archivo = fopen("persistence.txt", "a");
-    if (archivo == NULL)
+    FILE *file = fopen("persistence.txt", "a");
+    if (file == NULL)
     {
-        perror("Error al abrir el archivo");
+        perror("Error opening the file");
         return;
     }
-    fprintf(archivo, "%s\n", cadena);
-    fclose(archivo);
+    fprintf(file, "%s\n", string);
+    fclose(file);
 }
-void send_message_to_consumidor(int consumidor_socket, int opcion)
+void send_message_to_consumer(int consumer_socket, int option)
 {
-    if (opcion == 1 || opcion == 0)
+    if (option == 1 || option == 0)
     {
-        // Desencolamos solo la metrica memoria y la enviamos
-        char *dequeuedDataMemoryPartition1 = dequeue(mp_queue_productor, 0);
+        char *dequeuedDataMemoryPartition1 = dequeue(mp_queue_producer, 0);
         if (dequeuedDataMemoryPartition1 != NULL)
         {
-            printf("Elemento desencolado de \"memoria\" en la partición %d: %s\n", 1, dequeuedDataMemoryPartition1);
-            if (send(consumidor_socket, dequeuedDataMemoryPartition1, sizeof(dequeuedDataMemoryPartition1), 0) == -1)
-                perror("Error al enviar el mensaje");
-            if (persistencia == 1)
-                escribirEnArchivoPersistente(dequeuedDataMemoryPartition1);
-            free(dequeuedDataMemoryPartition1); // Asegúrate de liberar la memoria del elemento desencolado.
+            printf("Element dequeued from section \"memory\" partition #%d: %s\n", 1, dequeuedDataMemoryPartition1);
+            if (send(consumer_socket, dequeuedDataMemoryPartition1, sizeof(dequeuedDataMemoryPartition1), 0) == -1)
+                perror("Error sending the message");
+            if (persistence == 1)
+                writeOnPersistentFile(dequeuedDataMemoryPartition1);
+            free(dequeuedDataMemoryPartition1);
         }
-        char *dequeuedDataMemoryPartition2 = dequeue(mp_queue_productor, 1);
+        char *dequeuedDataMemoryPartition2 = dequeue(mp_queue_producer, 1);
         if (dequeuedDataMemoryPartition2 != NULL)
         {
-            printf("Elemento desencolado de \"memoria\" en la partición %d: %s\n", 2, dequeuedDataMemoryPartition2);
-            if (send(consumidor_socket, dequeuedDataMemoryPartition2, sizeof(dequeuedDataMemoryPartition2), 0) == -1)
-                perror("Error al enviar el mensaje");
-            if (persistencia == 1)
-                escribirEnArchivoPersistente(dequeuedDataMemoryPartition2);
-            free(dequeuedDataMemoryPartition2); // Asegúrate de liberar la memoria del elemento desencolado.
+            printf("Element dequeued from section \"memory\" partition #%d: %s\n", 2, dequeuedDataMemoryPartition2);
+            if (send(consumer_socket, dequeuedDataMemoryPartition2, sizeof(dequeuedDataMemoryPartition2), 0) == -1)
+                perror("Error sending the message");
+            if (persistence == 1)
+                writeOnPersistentFile(dequeuedDataMemoryPartition2);
+            free(dequeuedDataMemoryPartition2);
         }
     }
-    if (opcion == 2 || opcion == 0)
+    if (option == 2 || option == 0)
     {
         // Desencolamos la metrica cpu y la enviamos
-        char *dequeuedDataCpuPartition1 = dequeue(mp_queue_productor, 2);
+        char *dequeuedDataCpuPartition1 = dequeue(mp_queue_producer, 2);
         if (dequeuedDataCpuPartition1 != NULL)
         {
-            printf("Elemento desencolado de \"CPU\" en la partición %d: %s\n", 1, dequeuedDataCpuPartition1);
-            if (send(consumidor_socket, dequeuedDataCpuPartition1, sizeof(dequeuedDataCpuPartition1), 0) == -1)
-                perror("Error al enviar el mensaje");
-            if (persistencia == 1)
-                escribirEnArchivoPersistente(dequeuedDataCpuPartition1);
-            free(dequeuedDataCpuPartition1); // Asegúrate de liberar la memoria del elemento desencolado.
+            printf("Element dequeued from section \"CPU\" partition #%d: %s\n", 1, dequeuedDataCpuPartition1);
+            if (send(consumer_socket, dequeuedDataCpuPartition1, sizeof(dequeuedDataCpuPartition1), 0) == -1)
+                perror("Error sending the message");
+            if (persistence == 1)
+                writeOnPersistentFile(dequeuedDataCpuPartition1);
+            free(dequeuedDataCpuPartition1);
         }
-        char *dequeuedDataCpuPartition2 = dequeue(mp_queue_productor, 3);
+        char *dequeuedDataCpuPartition2 = dequeue(mp_queue_producer, 3);
         if (dequeuedDataCpuPartition2 != NULL)
         {
-            printf("Elemento desencolado de \"CPU\" en la partición %d: %s\n", 2, dequeuedDataCpuPartition2);
-            if (send(consumidor_socket, dequeuedDataCpuPartition2, sizeof(dequeuedDataCpuPartition2), 0) == -1)
-                perror("Error al enviar el mensaje");
-            if (persistencia == 1)
-                escribirEnArchivoPersistente(dequeuedDataCpuPartition2);
-            free(dequeuedDataCpuPartition2); // Asegúrate de liberar la memoria del elemento desencolado.
+            printf("Element dequeued from section \"CPU\" partition #%d: %s\n", 2, dequeuedDataCpuPartition2);
+            if (send(consumer_socket, dequeuedDataCpuPartition2, sizeof(dequeuedDataCpuPartition2), 0) == -1)
+                perror("Error sending the message");
+            if (persistence == 1)
+                writeOnPersistentFile(dequeuedDataCpuPartition2);
+            free(dequeuedDataCpuPartition2);
         }
     }
 }
 
-void splitAndEnqueue(char *cadena)
+void splitAndEnqueue(char *string)
 {
-    char *token = strtok(cadena, "/");
+    char *token = strtok(string, "/");
     int i = 0;
     char *sectionName;
     int partitionNumber;
@@ -217,17 +212,14 @@ void splitAndEnqueue(char *cadena)
 
         if (i == 1)
         {
-            // Se extrae el nombre de la metrica
             sectionName = token;
         }
         if (i == 2)
         {
-            // Se extrae el valor de la metrica
             data = token;
         }
         if (i == 3)
         {
-            // Se extrae el numero de la particion
             partitionNumber = atoi(token);
         }
         token = strtok(NULL, "|");
@@ -242,14 +234,14 @@ void splitAndEnqueue(char *cadena)
     char *formatted_section_name;
     formatted_section_name = (char *)malloc(20);
     strcpy(formatted_section_name, sectionName);
-    if (strcmp(formatted_section_name, "memoria") == 0)
+    if (strcmp(formatted_section_name, "memory") == 0)
     {
-        enqueue(mp_queue_productor, "memoria", partitionNumber - 1, formatted_data);
-        printPartitionContents(mp_queue_productor, "memoria", partitionNumber - 1);
+        enqueue(mp_queue_producer, "memory", partitionNumber - 1, formatted_data);
+        printPartitionContents(mp_queue_producer, "memory", partitionNumber - 1);
     }
     else if (strcmp(formatted_section_name, "cpu") == 0)
     {
-        enqueue(mp_queue_productor, "cpu", partitionNumber + 1, formatted_data);
-        printPartitionContents(mp_queue_productor, "cpu", partitionNumber + 1);
+        enqueue(mp_queue_producer, "cpu", partitionNumber + 1, formatted_data);
+        printPartitionContents(mp_queue_producer, "cpu", partitionNumber + 1);
     }
 }
