@@ -1,6 +1,7 @@
 {
     "C_Cpp.errorSquiggles": "disabled",
     "files.associations": {
-        "productor_utils.h": "c"
+        "productor_utils.h": "c",
+        "producer_utils.h": "c"
     }
 }
